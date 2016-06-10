@@ -31,7 +31,7 @@ public class IrSerial {
     public final static int RS232_BITS = 8;
     private int baud;
 
-    private boolean correctionEnabled = false;
+    private boolean correctionEnabled = true;
     public final static int CORRECTION_DELAY = 10000;
 
     public final static int CORRECTION_TEST_VALUE = 0x99;
@@ -215,8 +215,11 @@ public class IrSerial {
      * @return
      */
     public boolean send (int data){
+        Log.e("Value hex: ", "0x" + Integer.toHexString(data));
+        Log.e("Sent: ", data + "");
         return sendRaw(construct(data));
     }
+
 
     //Working on that
 //    public boolean sendHex (String hexData){
@@ -242,7 +245,6 @@ public class IrSerial {
      * @return
      */
     public boolean send (String data){
-        Log.e("Sent: ", data);
         return sendRaw(construct(data));
     }
 

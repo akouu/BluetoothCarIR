@@ -30,7 +30,7 @@ public class IrCarActivity extends Activity {
         this.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT); //always keep orientation in portrait
         getScreenSize(); //gets the WIDTH and HEIGHT
         irSerial = new IrSerial(this, IrSerial.DEFAULT_FREQ, IrSerial.DEFAULT_BAUD);
-        irSerial.setCorrectionEnabled(true);
+        // irSerial.setCorrectionEnabled(false);
 
     }
     //Initialise bluetooth stuff
@@ -57,8 +57,10 @@ public class IrCarActivity extends Activity {
     }
 
     String message = new String();
-    String speed = new String();
-    String angle = new String();
+    int speed = 0;
+    int direction = 0;
+    int angle = 0;
+    int val=0;
 
     long prevTime = System.currentTimeMillis();
 
@@ -71,43 +73,53 @@ public class IrCarActivity extends Activity {
                 //return true;
             case MotionEvent.ACTION_MOVE:           //in the form of: x0.35 y0.54
 
+                // Set the speed and the direction (forward/backward)
                 double positionY = (1-(event.getY()/HEIGHT));
                 if (positionY <=1 && positionY >=0.5) {
-                    positionY = ((positionY)-0.5)*2*255;
-                    speed = "f " + (int) positionY;
+                    direction = 1;
+                    speed = (int) (((positionY)-0.5)*2*255+0.5);
                 }
                 if (positionY>0 && positionY<0.5){
-                    positionY = (0.5-positionY)*2*255;
-                    speed = "b " + (int) positionY;
+                    direction = 0;
+                    speed = (int) ((0.5-positionY)*2*255+0.5);
                 }
 
-                if (positionY<=50) {
-                    speed = "f 0";
+                // Set the angle
+                angle = (int) (135 - (event.getX()/WIDTH)*45);
+
+                // Log.e("Speed: ", speed + "");
+                // Log.e("Angle: ", angle + "");
+
+                // Set direction: 1 forward, 0 backward
+                val = 0;
+                if (direction==1) {
+                    val |= 0x80;
                 }
 
-                float positionX = 135 - (event.getX()/WIDTH)*45;
-                angle = "" + (int) positionX;
+                // Assign 3 bits to set speed
+                if (speed >= 80) {
+                    val |= ((speed/22) << 4);
+                }
+                else {
+                    val =0;
 
-                message = speed + " " + angle;
+                }
 
-          //      irSerial.sendSlow(message);
 
-                Log.e("Loop: ", message);
+                // Assign first 4 bits to set angle
+                val |= (135-angle)/3;
+
+                // Log.e("Value int: ", val + "");
+                // Log.e("Value hex: ", "0x" + Integer.toHexString(val));
                 break;
 
             case MotionEvent.ACTION_UP:
-                // message = "x0.00y0.00\n";
-//                message = "x0.00";
-                // Log.e(":)", message);               //output this on Logcat
-//                sendResponse(message);              //send through bluetooth
-                // return false;
-//                message = "y0.00";
-//                sendResponse(message);
                 break;
         }
 
+        // Send the message through IR
         if (System.currentTimeMillis() - prevTime > 300){
-            irSerial.send(message);
+            irSerial.send(val & 0xff);
             prevTime = System.currentTimeMillis();
         }
         return super.onTouchEvent(event);
