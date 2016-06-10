@@ -354,17 +354,6 @@ public class IrSerial {
 
         StringBuilder tmp = new StringBuilder(binaryData);
 
-        if (evenParity || oddParity) {
-            int parityBit = 0;
-            for (char t : tmp) {
-                parityBit ^= Integer.parseInt(t);
-            }
-            if (evenParity)
-                tmp.append(parityBit & 0x01);
-            if (oddParity)
-                tmp.append( (~parityBit) & 0x01)
-        }
-
         tmp.reverse();
 
         if (evenParity || oddParity) {
