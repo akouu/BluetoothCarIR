@@ -5,6 +5,8 @@ import android.hardware.ConsumerIrManager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 
+import java.lang.Integer;
+import java.lang.System;
 import java.util.ArrayList;
 import java.util.InputMismatchException;
 import java.util.List;
@@ -15,7 +17,7 @@ import java.util.List;
 public class IrSerial {
 
     //vars
-    private int DEBUG = 0;
+    private int DEBUG = 1;
 
     private ConsumerIrManager irManager;
     private Context context;
@@ -35,6 +37,28 @@ public class IrSerial {
     public final static int CORRECTION_DELAY = 10000;
 
     public final static int CORRECTION_TEST_VALUE = 0x99;
+
+    private boolean evenParity = false;
+    private boolean oddParity = true;
+
+    public void setEvenParity(boolean evenParity) {
+        if (evenParity)
+            setOddParity(false);
+        this.evenParity = evenParity;
+    }
+
+    public void setOddParity(boolean oddParity) {
+        if (oddParity)
+            setEvenParity(false);
+        this.oddParity = oddParity;
+    }
+
+    public boolean isEvenParity() {
+        return evenParity;
+    }
+    public boolean isOddParity() {
+        return oddParity;
+    }
 
     /**
      * Initialise the IR transmission with default values of frequency of 38400 Hz and
@@ -330,7 +354,33 @@ public class IrSerial {
 
         StringBuilder tmp = new StringBuilder(binaryData);
 
+        if (evenParity || oddParity) {
+            int parityBit = 0;
+            for (char t : tmp) {
+                parityBit ^= Integer.parseInt(t);
+            }
+            if (evenParity)
+                tmp.append(parityBit & 0x01);
+            if (oddParity)
+                tmp.append( (~parityBit) & 0x01)
+        }
+
         tmp.reverse();
+
+        if (evenParity || oddParity) {
+            int parityBit = 0;
+            for (int i = 0; i < tmp.length(); i++){
+                parityBit ^= Integer.parseInt(String.valueOf(tmp.charAt(i)));
+                if (DEBUG == 1)
+                    Log.e("parity bit", ""+parityBit);
+            }
+
+            if (evenParity)
+                tmp.append(parityBit);
+            if (oddParity)
+                tmp.append((~parityBit) & 0x01);
+        }
+
         tmp.insert(0, '1');
         tmp.append('0');
 
