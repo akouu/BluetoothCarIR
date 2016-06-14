@@ -17,7 +17,7 @@ import java.util.List;
 public class IrSerial {
 
     //vars
-    private int DEBUG = 1;
+    private int DEBUG = 0;
 
     private ConsumerIrManager irManager;
     private Context context;
@@ -33,13 +33,13 @@ public class IrSerial {
     public final static int RS232_BITS = 8;
     private int baud;
 
-    private boolean correctionEnabled = true;
+    private boolean correctionEnabled = false;
     public final static int CORRECTION_DELAY = 10000;
 
     public final static int CORRECTION_TEST_VALUE = 0x99;
 
     private boolean evenParity = false;
-    private boolean oddParity = true;
+    private boolean oddParity = false;
 
     public void setEvenParity(boolean evenParity) {
         if (evenParity)

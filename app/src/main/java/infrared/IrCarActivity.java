@@ -31,6 +31,7 @@ public class IrCarActivity extends Activity {
         getScreenSize(); //gets the WIDTH and HEIGHT
         irSerial = new IrSerial(this, IrSerial.DEFAULT_FREQ, IrSerial.DEFAULT_BAUD);
         // irSerial.setCorrectionEnabled(false);
+        // irSerial.setOddParity(true);
 
     }
     //Initialise bluetooth stuff
@@ -97,20 +98,43 @@ public class IrCarActivity extends Activity {
                 }
 
                 // Assign 3 bits to set speed
-                if (speed >= 80) {
-                    val |= ((speed/22) << 4);
-                }
-                else {
-                    val =0;
+                // if (speed >= 80) {
+                   // speed -= 80;
+                    // val |= ((speed/22) << 4);
+                    // int new_speed = (val & 0x70) >> 4;
+                    // Log.e("Val (hex): ", "0x" + Integer.toHexString(val));
+                    // Log.e("Speed: ", speed + " " + new_speed);
 
-                }
-
+                        //        }
+                // else {
+                //    val =0;
+                // }
 
                 // Assign first 4 bits to set angle
-                val |= (135-angle)/3;
+                // val |= (135-angle)/3;
 
                 // Log.e("Value int: ", val + "");
                 // Log.e("Value hex: ", "0x" + Integer.toHexString(val));
+
+                // ********************************************************
+
+                // Assign 3 bits to set angle
+                val |= ((135-angle)/6) << 4;
+
+                // Assign 4 bits to set speed
+            if (speed >= 60) {
+                speed -= 60;
+                val |= ((speed/13));
+            }
+                else {
+                val = 0;
+            }
+
+
+                int new_speed = (val & 0x0f);
+                // Log.e("Val (hex): ", "0x" + Integer.toHexString(val));
+                // Log.e("Speed25252: ", speed + " " + new_speed);
+
                 break;
 
             case MotionEvent.ACTION_UP:

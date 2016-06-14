@@ -1,6 +1,7 @@
 package bluetoothStuff;
 
 import android.bluetooth.BluetoothSocket;
+import android.util.Log;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -60,6 +61,20 @@ public class ManageConnectedThread implements Runnable {
         try {
             byte[] bytes = input.getBytes(); // converts entered String into
             mmOutStream.write(bytes);
+        } catch (IOException e) { }
+    }
+
+    public void write(int input) {
+        try {
+            // byte myByte = 0x00;
+//            for (int i = 0; i < 8; i++){
+//                myByte = (byte) (input << i);
+//            }
+            // short tmp = (short) (input & 0xFF);
+            byte bytes = (byte) (input&0xFF);
+            mmOutStream.write(bytes);
+            Log.e("Send word int", "Int: " + input + ", Hex: 0x" + Integer.toHexString(input));
+            Log.e("Send word bytes", "Int: " + bytes + ", Hex: 0x" + Integer.toHexString(bytes));
         } catch (IOException e) { }
     }
 

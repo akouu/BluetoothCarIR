@@ -71,15 +71,15 @@ public class CarActivity extends Activity {
     }
 
     //sends response through bluetooth, firstly gets a socket
-    public void sendResponse(String sendWord) {
+    public void sendResponse(int sendWord) {
         // Toast.makeText(getApplicationContext(), "Goes into the function: " + sendWord, Toast.LENGTH_SHORT).show();
         if (connectThread.getSocket() != null && connectThread.getSocket().isConnected()) { //check if device is still connected
             if (mmManagegedConnection == null) {
                 mmManagegedConnection = new ManageConnectedThread(connectThread.getSocket());   //get bluetooth socket
             }
-            Log.e("Send word: ", sendWord);
+            Log.e("Send word ", "Int: " + sendWord + ", Hex: 0x" + Integer.toHexString(sendWord));
             Toast.makeText(getApplicationContext(), "Connected: " + sendWord, Toast.LENGTH_SHORT).show();
-            mmManagegedConnection.write(sendWord);                                          //send the word
+            mmManagegedConnection.write(sendWord); //send the word
         }
         //mmManagegedConnection.write(string.getBytes(Charset.forName("UTF-8")));
     }
@@ -98,15 +98,20 @@ public class CarActivity extends Activity {
     private Runnable mClickRunnable = new Runnable() {
         @Override
         public void run() {
-            sendResponse(message);
+            // sendResponse(message);
             // sendResponse(angle);
             // Toast.makeText(getApplicationContext(), message, Toast.LENGTH_SHORT).show();
         }
     };
 
-    String message = new String();
-    String speed = new String();
-    String angle = new String();
+
+    // String message = new String();
+    int speed = 0;
+    int direction = 0;
+    int angle = 0;
+    int val=0;
+
+    long prevTime = System.currentTimeMillis();
 
     //Magic is done in here!
     @Override
@@ -117,41 +122,90 @@ public class CarActivity extends Activity {
                 //return true;
             case MotionEvent.ACTION_MOVE:           //in the form of: x0.35 y0.54
 
+                // Set the speed and the direction (forward/backward)
                 double positionY = (1-(event.getY()/HEIGHT));
-                        if (positionY <=1 && positionY >=0.5) {
-                            positionY = ((positionY)-0.5)*2*255;
-
-                            speed = "f" + (int) positionY;
-                            }
-                        if (positionY>0 && positionY<0.5){
-                            positionY = (0.5-positionY)*2*255;
-                            speed = "b" + (int) positionY;
-                        }
-
-                if (positionY<=50) {
-                    speed = "f0";
+                if (positionY <=1 && positionY >=0.5) {
+                    direction = 1;
+                    speed = (int) (((positionY)-0.5)*2*255+0.5);
+                }
+                if (positionY>0 && positionY<0.5){
+                    direction = 0;
+                    speed = (int) ((0.5-positionY)*2*255+0.5);
                 }
 
-                float positionX = 135 - (event.getX()/WIDTH)*45;
+                // Set the angle
+                angle = (int) (135 - (event.getX()/WIDTH)*45);
 
-                angle = "" + (int) positionX;
+                // Log.e("Speed: ", speed + "");
+                // Log.e("Angle: ", angle + "");
 
-                message = speed + " " + angle;
-                mHandler.removeCallbacks(mClickRunnable);
-                mHandler.postDelayed(mClickRunnable, 300);
-                Log.e("Loop: ", message);
+                // Set direction: 1 forward, 0 backward
+                val = 0;
+                if (direction==1) {
+                    val |= 0x80;
+                }
+
+                // Assign 3 bits to set speed
+              //  if (speed >= 80) {
+            //        speed -= 80;
+          //          val |= ((speed/22) << 4);
+                    // Log.e("Val (hex): ", "0x" + Integer.toHexString(val));
+        //            int speedval= (val & 0x70) >> 4;
+      //              int new_speed = speed+80;
+                    // Log.e("Speed: ", new_speed + " " + speedval);
+
+    //            }
+  //              else {
+//                    val =0;
+
+                //}
+
+                // Assign 3 bits to set angle
+                val |= (((135-angle)/6) << 4) ;
+                // int angleval = (val & 0x70)>>4;
+                // int new_angle = angle + 135;
+                // Log.e("Angle: ", angle + " " + angleval);
+
+                // Assign 4 bits to set speed
+                if (speed >= 60) {
+                    speed -= 60;
+                    val |= speed / 12;
+                    // Log.e("Val (hex): ", "0x" + Integer.toHexString(val));
+                    // int speedval = (val & 0x0f);
+                    // int new_speed = speed + 60;
+                    // Log.e("Speed: ", new_speed + " " + speedval);
+                }
+                else {
+                    val = val & 0xf0;
+                }
+
+
+
+
+                // Assign first 4 bits to set angle
+                // val |= (135-angle)/3;
+
+                // Log.e("Value int: ", val + "");
+                // Log.e("Value hex: ", "0x" + Integer.toHexString(val));
+
+                // To add in the code
+                // mHandler.removeCallbacks(mClickRunnable);
+                // mHandler.postDelayed(mClickRunnable, 300);
+
+                sendResponse(val);
+
                 break;
 
             case MotionEvent.ACTION_UP:
-                // message = "x0.00y0.00\n";
-//                message = "x0.00";
-                // Log.e(":)", message);               //output this on Logcat
-//                sendResponse(message);              //send through bluetooth
-               // return false;
-//                message = "y0.00";
-//                sendResponse(message);
                 break;
         }
+
+        // Send the message through IR
+        // if (System.currentTimeMillis() - prevTime > 50){
+            // irSerial.send(val & 0xff);
+           // sendResponse(val);
+           // prevTime = System.currentTimeMillis();
+        // }
         return super.onTouchEvent(event);
     }
 }
